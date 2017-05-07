@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<head>
+	<script type="text/javascript" src="./js/jquery-3.1.1.min.js"></script>
+	<script type="text/javascript" src="./js/angular.min.js"></script>
+    <script type="text/javascript" src="./js/soundmanager2.js"></script>
+    <script type="text/javascript" src="./js/JSON/transcript.js"></script>
+    <script src="./js/bar-ui.js"></script>
+    
+    <script type="text/javascript">
+
+    	transcript = JSON.parse(transcript);
+
+    	var timestamp_arr = Array();
+    	var i = 0;
+
+    	var pushDuration = function() {
+    		setTimeout(function() {
+    			timestamp_arr.push(window.sm2BarPlayers[0].actions.getDuration());
+    			document.getElementById('duration_getter').setAttribute('onclick', "endLoop()");
+    		}, 1000);
+    	}
+
+    	var curr_time = function() {
+    		return window.sm2BarPlayers[0].actions.getCurrentTime();
+    	}
+
+    	var is_paused = function() {
+    		return window.sm2BarPlayers[0].actions.isPaused();
+    	}
+
+    	var removeHighlight = function(barTime) {
+    		var words = document.getElementsByClassName('words');
+    		for(var i = 0; i < barTime; i++) {
+    			words[i].setAttribute('class', 'words highlight');
+    		}
+    		for(var i = barTime + 1; i < words.length; i++) {
+    			words[i].setAttribute('class', 'words');
+    		}
+    	}
+
+    	var endLoop = function() {
+    		if(curr_time() == 0 && !is_paused()) {
+	    		i = 0;
+	    		removeHighlight(0);	
+    		}
+    	}
+
+    	$(document).ready(function() {
+    		var p = document.getElementById('transcriptParagraph');
+    		var para = "";
+    		for (var phrase in transcript.results) {
+    			for (var word in transcript.results[phrase].alternatives[0].timestamps) {
+    				currTime = transcript.results[phrase].alternatives[0].timestamps[word][1];
+    				currWord = transcript.results[phrase].alternatives[0].timestamps[word][0];
+    				para += '<a class="words" href="#" onclick="window.sm2BarPlayers[0].actions.playFrom(' + currTime + '); i = ' + i + '; removeHighlight(' + i + ')">' + currWord + '</a> ';
+    				i++;
+    				timestamp_arr.push(currTime * 1000);
+    			}
+    		}
+
+    		p.innerHTML = para;
+			
+			i = 0;
+    		setInterval(function() {
+    			if(curr_time() < timestamp_arr[i + 1]) {
+    				document.getElementsByClassName('words')[i].setAttribute('class', 'words highlight');
+    			} else {
+    				i++;		
+    			}
+    		}, 1);
+    	});
+    </script>
+    
+    <link rel="stylesheet" href="./css/bar-ui.css" />
+</head>
+
+<body>
+	<center>
+	<div class="wrapper">
+	    <div class="sm2-bar-ui compact flat full-width">
+
+	        <div class="bd sm2-main-controls">
+	            <div class="sm2-inline-element sm2-button-element">
+	                <div class="sm2-button-bd">
+	                    <a href="#play" class="sm2-inline-button play-pause" id="duration_getter" onclick="pushDuration();">Play / pause</a>
+	                </div>
+	            </div>
+
+	            <div class="sm2-inline-element sm2-inline-status">
+	                
+	                <div class="sm2-playlist">
+	                    <div class="sm2-playlist-target">
+	                        <!-- playlist <ul> + <li> markup will be injected here
+	                        if you want default / non-JS content, you can put that here. -->
+	                        <noscript><p>JavaScript is required.</p></noscript>
+	                    </div>
+	                </div>
+
+	                <div class="sm2-progress">
+	                    <div class="sm2-row">
+	                        <div class="sm2-inline-time">0:00</div>
+	                            <div class="sm2-progress-bd">
+	                                <div class="sm2-progress-track">
+	                                    <div class="sm2-progress-bar"></div>
+	                                    <div class="sm2-progress-ball">
+	                                        <div class="icon-overlay"></div>
+	                                    </div>
+	                                </div>
+	                            </div>
+	                        <div class="sm2-inline-duration">0:00</div>
+	                    </div>
+	                </div>
+
+	            </div>
+
+	            <div class="sm2-inline-element sm2-button-element sm2-volume">
+	               <div class="sm2-button-bd">
+	                    <span class="sm2-inline-button sm2-volume-control volume-shade"></span>
+	                    <a href="#volume" class="sm2-inline-button sm2-volume-control">volume</a>
+	                </div>
+	            </div>
+
+	        </div>
+
+	        <div class="bd sm2-playlist-drawer sm2-element">
+
+	            <div class="sm2-inline-texture">
+	                <div class="sm2-box-shadow"></div>
+	            </div>
+	            
+	            <div class="sm2-playlist-wrapper">
+	                <ul class="sm2-playlist-bd">
+	                    <li><a href="./audio/audio.wav">Audio</a></li>
+	                </ul>
+	            </div>
+
+	        </div>
+
+	    </div>
+	    <div class="transcript">
+	    	<p id="transcriptParagraph">
+	    	</p>
+	    </div>
+	</div>
+</center>
+</body>
+</html>
